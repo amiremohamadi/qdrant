@@ -13,7 +13,8 @@ use collection::operations::cluster_ops::{
 use collection::operations::shard_selector_internal::ShardSelectorInternal;
 use collection::operations::snapshot_ops::SnapshotDescription;
 use collection::operations::types::{
-    AliasDescription, CollectionClusterInfo, CollectionInfo, CollectionsAliasesResponse,
+    AliasDescription, CollectionClusterInfo, CollectionInfo, CollectionShardKeys,
+    CollectionsAliasesResponse,
 };
 use collection::operations::verification::new_unchecked_verification_pass;
 use collection::shards::replica_set;
@@ -86,6 +87,25 @@ pub async fn do_list_collections(
         .collect_vec();
 
     Ok(CollectionsResponse { collections })
+}
+
+pub async fn do_get_collection_shard_keys(
+    toc: &TableOfContent,
+    access: Access,
+    name: &str,
+) -> Result<CollectionShardKeys, StorageError> {
+    let collection_pass = access.check_collection_access(name, AccessRequirements::new())?;
+
+    let collection = toc.get_collection(&collection_pass).await?;
+
+    let state = collection.state().await;
+    let shard_keys = state
+        .shards_key_mapping
+        .iter_shard_keys()
+        .map(|k| k.clone())
+        .collect();
+
+    Ok(CollectionShardKeys { shard_keys })
 }
 
 /// Construct shards-replicas layout for the shard from the given scope of peers

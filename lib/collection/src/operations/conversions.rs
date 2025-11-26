@@ -18,8 +18,8 @@ use segment::common::operation_error::OperationError;
 use segment::data_types::modifier::Modifier;
 use segment::data_types::vectors::{VectorInternal, VectorStructInternal};
 use segment::types::{
-    Distance, Filter, HnswConfig, MultiVectorConfig, QuantizationConfig, StrictModeConfigOutput,
-    WithPayloadInterface,
+    Distance, Filter, HnswConfig, MultiVectorConfig, QuantizationConfig, ShardKey,
+    StrictModeConfigOutput, WithPayloadInterface,
 };
 use shard::retrieve::record_internal::RecordInternal;
 use tonic::Status;
@@ -52,9 +52,9 @@ use crate::operations::config_diff::{
 use crate::operations::point_ops::{FilterSelector, PointIdsList, PointsSelector, WriteOrdering};
 use crate::operations::shard_selector_internal::ShardSelectorInternal;
 use crate::operations::types::{
-    AliasDescription, CollectionClusterInfo, CollectionInfo, CollectionStatus, CollectionWarning,
-    CountResult, LocalShardInfo, OptimizersStatus, RecommendRequestInternal, RemoteShardInfo,
-    ShardTransferInfo, UpdateResult, UpdateStatus, VectorParams, VectorsConfig,
+    AliasDescription, CollectionClusterInfo, CollectionInfo, CollectionShardKeys, CollectionStatus,
+    CollectionWarning, CountResult, LocalShardInfo, OptimizersStatus, RecommendRequestInternal,
+    RemoteShardInfo, ShardTransferInfo, UpdateResult, UpdateStatus, VectorParams, VectorsConfig,
 };
 use crate::optimizers_builder::OptimizersConfig;
 use crate::shards::remote_shard::CollectionCoreSearchRequest;
@@ -1432,6 +1432,24 @@ impl From<ReshardingDirection> for api::grpc::qdrant::ReshardingDirection {
             ReshardingDirection::Up => api::grpc::qdrant::ReshardingDirection::Up,
             ReshardingDirection::Down => api::grpc::qdrant::ReshardingDirection::Down,
         }
+    }
+}
+
+impl From<CollectionShardKeys> for Vec<api::grpc::qdrant::ShardKey> {
+    fn from(value: CollectionShardKeys) -> Self {
+        value
+            .shard_keys
+            .into_iter()
+            .map(|k| {
+                let key = match k {
+                    ShardKey::Keyword(k) => {
+                        api::grpc::qdrant::shard_key::Key::Keyword(k.to_string())
+                    }
+                    ShardKey::Number(n) => api::grpc::qdrant::shard_key::Key::Number(n),
+                };
+                api::grpc::qdrant::ShardKey { key: Some(key) }
+            })
+            .collect()
     }
 }
 

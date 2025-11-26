@@ -282,6 +282,11 @@ pub struct CollectionClusterInfo {
     pub resharding_operations: Option<Vec<ReshardingInfo>>,
 }
 
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct CollectionShardKeys {
+    pub shard_keys: Vec<ShardKey>,
+}
+
 #[derive(Debug, Serialize, JsonSchema, Clone, Anonymize)]
 pub struct ShardTransferInfo {
     #[anonymize(false)]

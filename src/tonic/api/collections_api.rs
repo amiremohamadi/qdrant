@@ -9,12 +9,13 @@ use api::grpc::qdrant::{
     DeleteShardKeyRequest, DeleteShardKeyResponse, GetCollectionInfoRequest,
     GetCollectionInfoResponse, ListAliasesRequest, ListAliasesResponse,
     ListCollectionAliasesRequest, ListCollectionsRequest, ListCollectionsResponse,
-    UpdateCollection, UpdateCollectionClusterSetupRequest, UpdateCollectionClusterSetupResponse,
+    ListShardKeysRequest, ListShardKeysResponse, UpdateCollection,
+    UpdateCollectionClusterSetupRequest, UpdateCollectionClusterSetupResponse,
 };
 use collection::operations::cluster_ops::{
     ClusterOperations, CreateShardingKeyOperation, DropShardingKeyOperation,
 };
-use collection::operations::types::CollectionsAliasesResponse;
+use collection::operations::types::{CollectionShardKeys, CollectionsAliasesResponse};
 use collection::operations::verification::new_unchecked_verification_pass;
 use storage::dispatcher::Dispatcher;
 use tonic::{Request, Response, Status};
@@ -245,6 +246,31 @@ impl Collections for CollectionsService {
         Ok(Response::new(UpdateCollectionClusterSetupResponse {
             result,
         }))
+    }
+
+    async fn list_shard_keys(
+        &self,
+        mut request: Request<ListShardKeysRequest>,
+    ) -> Result<Response<ListShardKeysResponse>, Status> {
+        validate(request.get_ref())?;
+        let timing = Instant::now();
+        let access = extract_access(&mut request);
+
+        // Nothing to verify here.
+        let pass = new_unchecked_verification_pass();
+
+        let shard_keys: CollectionShardKeys = do_get_collection_shard_keys(
+            self.dispatcher.toc(&access, &pass),
+            access,
+            request.into_inner().collection_name.as_str(),
+        )
+        .await?
+        .into();
+        let response = ListShardKeysResponse {
+            shard_keys: shard_keys.into(),
+            time: timing.elapsed().as_secs_f64(),
+        };
+        Ok(Response::new(response))
     }
 
     async fn create_shard_key(

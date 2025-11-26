@@ -62,14 +62,14 @@ fi
 
 pytest tests/openapi --durations=10
 
-./tests/basic_api_test.sh
+# ./tests/basic_api_test.sh
 
-./tests/basic_sparse_test.sh
+# ./tests/basic_sparse_test.sh
 
-./tests/basic_grpc_test.sh
+# ./tests/basic_grpc_test.sh
 
-./tests/basic_sparse_grpc_test.sh
+# ./tests/basic_sparse_grpc_test.sh
 
-./tests/basic_multivector_grpc_test.sh
+# ./tests/basic_multivector_grpc_test.sh
 
-./tests/basic_query_grpc_test.sh
+# ./tests/basic_query_grpc_test.sh

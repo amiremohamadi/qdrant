@@ -61,6 +61,10 @@ impl ShardKeyMapping {
             .flat_map(|shard_ids| shard_ids.iter().copied())
     }
 
+    pub fn iter_shard_keys(&self) -> impl Iterator<Item = &ShardKey> {
+        self.shard_key_to_shard_ids.keys()
+    }
+
     /// Get the shard key for a given shard ID
     ///
     /// `None` is returned if the shard ID has no key, or if the shard ID is unknown
